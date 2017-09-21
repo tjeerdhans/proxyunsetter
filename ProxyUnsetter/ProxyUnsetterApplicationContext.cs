@@ -13,7 +13,7 @@ namespace ProxyUnsetter
         {
             var trayMenu = new ContextMenu();
             trayMenu.MenuItems.Add("Force unset proxy now (double click)", OnUnsetProxy);
-            trayMenu.MenuItems.Add("set", OnSetProxy);
+            trayMenu.MenuItems.Add("Set to 127.0.0.1:8080", OnSetProxy);
             trayMenu.MenuItems.Add("Exit", OnExit);
 
             _trayIcon = new NotifyIcon
