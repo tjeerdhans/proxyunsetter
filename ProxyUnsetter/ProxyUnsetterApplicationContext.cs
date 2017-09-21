@@ -15,7 +15,7 @@ namespace ProxyUnsetter
 
         private bool _unsetProxyAutomatically = true;
 
-        private bool _notifyOfProxySet = false;
+        private bool _notifyOfProxySet;
 
         public ProxyUnsetterApplicationContext()
         {
@@ -43,8 +43,7 @@ namespace ProxyUnsetter
 
             _trayIcon.DoubleClick += OnUnsetProxy;
 
-            var checkTimer = new Timer();
-            checkTimer.Interval = 5000;
+            var checkTimer = new Timer { Interval = 5000 };
             checkTimer.Tick += _checkTimer_Tick;
             checkTimer.Start();
         }
