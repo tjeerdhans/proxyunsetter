@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 using ProxyUnsetter.Properties;
+using Timer = System.Windows.Forms.Timer;
 
 namespace ProxyUnsetter
 {
@@ -9,9 +11,21 @@ namespace ProxyUnsetter
     {
         private readonly NotifyIcon _trayIcon;
 
+        private bool _lastProxyState;
+
+        private bool _unsetProxyAutomatically = true;
+
+        private bool _notifyOfProxySet = false;
+
         public ProxyUnsetterApplicationContext()
         {
             var trayMenu = new ContextMenu();
+            var automaticUnsetProxyMenuItem =
+                new MenuItem("Unset proxy automatically", OnToggleAutomaticProxyUnset) { Checked = true };
+            var notifyOfProxySetMenuItem =
+                new MenuItem("Notify when proxy set", OnToggleNotifyOfProxySet) { Checked = false };
+            trayMenu.MenuItems.Add(automaticUnsetProxyMenuItem);
+            trayMenu.MenuItems.Add(notifyOfProxySetMenuItem);
             trayMenu.MenuItems.Add("Force unset proxy now (double click)", OnUnsetProxy);
             trayMenu.MenuItems.Add("Set to 127.0.0.1:8080", OnSetProxy);
             trayMenu.MenuItems.Add("About..", OnShowAboutBox);
@@ -20,7 +34,7 @@ namespace ProxyUnsetter
             _trayIcon = new NotifyIcon
             {
                 Text = @"ProxyUnsetter",
-                Icon = SystemIcons.Asterisk,// proxySet ? Resources.SetProxy : Resources.UnsetProxy,
+                Icon = SystemIcons.Asterisk,
                 ContextMenu = trayMenu,
                 Visible = true
             };
@@ -28,6 +42,45 @@ namespace ProxyUnsetter
             SetTrayIcon();
 
             _trayIcon.DoubleClick += OnUnsetProxy;
+
+            var checkTimer = new Timer();
+            checkTimer.Interval = 5000;
+            checkTimer.Tick += _checkTimer_Tick;
+            checkTimer.Start();
+        }
+
+        private void OnToggleNotifyOfProxySet(object sender, EventArgs e)
+        {
+            var menuItem = (MenuItem)sender;
+            menuItem.Checked = !menuItem.Checked;
+            _notifyOfProxySet = menuItem.Checked;
+        }
+
+        private void OnToggleAutomaticProxyUnset(object sender, EventArgs e)
+        {
+            var menuItem = (MenuItem)sender;
+            menuItem.Checked = !menuItem.Checked;
+            _unsetProxyAutomatically = menuItem.Checked;
+        }
+
+        private void _checkTimer_Tick(object sender, EventArgs e)
+        {
+            var proxySet = SetTrayIcon();
+            if (proxySet && proxySet != _lastProxyState)
+            {
+                if (_notifyOfProxySet)
+                {
+                    _trayIcon.ShowBalloonTip(3000, @"Proxy settings have changed", @"Proxy was set", ToolTipIcon.Info);
+                }
+                _lastProxyState = proxySet;
+                if (_unsetProxyAutomatically)
+                {
+                    ProxyHelper.UnsetProxy();
+                    _trayIcon.Icon = SystemIcons.Asterisk;
+                    Thread.Sleep(1000);
+                    _lastProxyState = SetTrayIcon();
+                }
+            }
         }
 
         private void OnShowAboutBox(object sender, EventArgs e)
@@ -36,23 +89,25 @@ namespace ProxyUnsetter
             aboutBox.Show();
         }
 
-        private void SetTrayIcon()
+        private bool SetTrayIcon()
         {
             var proxySet = ProxyHelper.GetCurrentProxyState();
             _trayIcon.Icon = proxySet ? Resources.SetProxy : Resources.UnsetProxy;
             _trayIcon.Text = $@"Proxy is {(proxySet ? "" : "not ")}set";
+            return proxySet;
         }
 
         private void OnSetProxy(object sender, EventArgs e)
         {
             ProxyHelper.SetProxy();
-            SetTrayIcon();
+            _lastProxyState = SetTrayIcon();
+
         }
 
         private void OnUnsetProxy(object sender, EventArgs e)
         {
             ProxyHelper.UnsetProxy();
-            SetTrayIcon();
+            _lastProxyState = SetTrayIcon();
         }
 
         private void OnExit(object sender, EventArgs e)

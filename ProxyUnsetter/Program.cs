@@ -12,7 +12,6 @@ namespace ProxyUnsetter
             Application.SetCompatibleTextRenderingDefault(false);
 
             Application.Run(new ProxyUnsetterApplicationContext());
-            //Application.Run(new Program());
         }
     }
 }
