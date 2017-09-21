@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ProxyUnsetter")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Tray application that will unset your proxy.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("THT")]
 [assembly: AssemblyProduct("ProxyUnsetter")]
