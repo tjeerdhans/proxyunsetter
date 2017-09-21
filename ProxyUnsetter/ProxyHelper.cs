@@ -15,9 +15,6 @@ namespace ProxyUnsetter
         private const int INTERNET_OPTION_REFRESH = 37;
         // ReSharper restore InconsistentNaming
 
-        //bool settingsReturn, refreshReturn;
-
-
         public static bool GetCurrentProxyState()
         {
             RegistryKey registry = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", true);
@@ -28,11 +25,7 @@ namespace ProxyUnsetter
                 return true;
             }
             var proxyEnableValue = registry.GetValue("ProxyEnable");
-            if (proxyEnableValue != null && (int)proxyEnableValue == 0)
-            {
-                return false;
-            }
-            return true;
+            return proxyEnableValue == null || (int)proxyEnableValue != 0;
         }
 
         private static void RefreshProxySettings()
@@ -51,7 +44,6 @@ namespace ProxyUnsetter
                 return;
             }
             registry.SetValue("ProxyEnable", 0);
-            //registry.SetValue("ProxyServer", "127.0.0.1:8080");
             RefreshProxySettings();
         }
 
