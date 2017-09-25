@@ -70,11 +70,13 @@ namespace ProxyUnsetter
                 if (_notifyOfProxySet)
                 {
                     _trayIcon.ShowBalloonTip(3000, @"Proxy settings have changed", @"Proxy was set", ToolTipIcon.Info);
+                    Program.SimpleLogLines.Add($"{DateTime.Now:t} Proxy was set.");
                 }
                 _lastProxyState = proxySet;
                 if (_unsetProxyAutomatically)
                 {
                     ProxyHelper.UnsetProxy();
+                    Program.SimpleLogLines.Add($"{DateTime.Now:t} Proxy was automatically unset.");
                     _trayIcon.Icon = SystemIcons.Asterisk;
                     Thread.Sleep(1000);
                     _lastProxyState = SetTrayIcon();

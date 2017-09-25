@@ -20,6 +20,7 @@ namespace ProxyUnsetter
             this.labelCopyright.Text = AssemblyCopyright;
             this.labelCompanyName.Text = AssemblyCompany;
             this.textBoxDescription.Text = AssemblyDescription;
+            textBoxLog.Text = string.Join(Environment.NewLine, Program.SimpleLogLines);
         }
 
         #region Assembly Attribute Accessors

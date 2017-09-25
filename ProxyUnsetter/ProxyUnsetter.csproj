@@ -25,7 +25,7 @@
     <SupportUrl>https://github.com/tjeerdhans/proxyunsetter</SupportUrl>
     <ProductName>ProxyUnsetter</ProductName>
     <PublisherName>THT</PublisherName>
-    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
