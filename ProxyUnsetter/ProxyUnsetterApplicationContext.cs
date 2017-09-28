@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using ProxyUnsetter.Properties;
 using Timer = System.Windows.Forms.Timer;
 
@@ -27,6 +28,7 @@ namespace ProxyUnsetter
             trayMenu.MenuItems.Add(automaticUnsetProxyMenuItem);
             trayMenu.MenuItems.Add(notifyOfProxySetMenuItem);
             trayMenu.MenuItems.Add("Force unset proxy now (double click)", OnUnsetProxy);
+            trayMenu.MenuItems.Add("Launch at Windows startup", OnToggleWindowsStartup);
             trayMenu.MenuItems.Add("Set to 127.0.0.1:8080", OnSetProxy);
             trayMenu.MenuItems.Add("About..", OnShowAboutBox);
             trayMenu.MenuItems.Add("Exit", OnExit);
@@ -46,6 +48,20 @@ namespace ProxyUnsetter
             var checkTimer = new Timer { Interval = 5000 };
             checkTimer.Tick += _checkTimer_Tick;
             checkTimer.Start();
+        }
+
+        private void OnToggleWindowsStartup(object sender, EventArgs e)
+        {
+            var menuItem = (MenuItem) sender;
+            menuItem.Checked = !menuItem.Checked;
+
+            RegistryKey rk = Registry.CurrentUser.OpenSubKey
+                ("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+
+            if (menuItem.Checked)
+                rk.SetValue("ProxyUnsetter", Application.ExecutablePath);
+            else
+                rk.DeleteValue("ProxyUnsetter", false);
         }
 
         private void OnToggleNotifyOfProxySet(object sender, EventArgs e)
