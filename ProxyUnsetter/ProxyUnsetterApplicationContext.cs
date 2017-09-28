@@ -11,31 +11,37 @@ namespace ProxyUnsetter
     public class ProxyUnsetterApplicationContext : ApplicationContext
     {
         private readonly NotifyIcon _trayIcon;
-
+        private const string AppName = "ProxyUnsetter";
         private bool _lastProxyState;
-
-        private bool _unsetProxyAutomatically = true;
-
-        private bool _notifyOfProxySet;
 
         public ProxyUnsetterApplicationContext()
         {
             var trayMenu = new ContextMenu();
             var automaticUnsetProxyMenuItem =
-                new MenuItem("Unset proxy automatically", OnToggleAutomaticProxyUnset) { Checked = true };
+                new MenuItem("Unset proxy automatically", OnToggleAutomaticProxyUnset)
+                {
+                    Checked = Settings.Default.UnsetProxyAutomatically
+                };
             var notifyOfProxySetMenuItem =
-                new MenuItem("Notify when proxy set", OnToggleNotifyOfProxySet) { Checked = false };
+                new MenuItem("Notify when proxy set", OnToggleNotifyOfProxySet)
+                {
+                    Checked = Settings.Default.NotifyOfProxySet
+                };
+            var launchAtWindowsStartupMenuItem = new MenuItem("Launch at Windows startup", OnToggleWindowsStartup)
+            {
+                Checked = GetLaunchAtWindowsStartupState()
+            };
             trayMenu.MenuItems.Add(automaticUnsetProxyMenuItem);
             trayMenu.MenuItems.Add(notifyOfProxySetMenuItem);
             trayMenu.MenuItems.Add("Force unset proxy now (double click)", OnUnsetProxy);
-            trayMenu.MenuItems.Add("Launch at Windows startup", OnToggleWindowsStartup);
+            trayMenu.MenuItems.Add(launchAtWindowsStartupMenuItem);
             trayMenu.MenuItems.Add("Set to 127.0.0.1:8080", OnSetProxy);
             trayMenu.MenuItems.Add("About..", OnShowAboutBox);
             trayMenu.MenuItems.Add("Exit", OnExit);
 
             _trayIcon = new NotifyIcon
             {
-                Text = @"ProxyUnsetter",
+                Text = AppName,
                 Icon = SystemIcons.Asterisk,
                 ContextMenu = trayMenu,
                 Visible = true
@@ -52,44 +58,67 @@ namespace ProxyUnsetter
 
         private void OnToggleWindowsStartup(object sender, EventArgs e)
         {
-            var menuItem = (MenuItem) sender;
+            var menuItem = (MenuItem)sender;
             menuItem.Checked = !menuItem.Checked;
 
-            RegistryKey rk = Registry.CurrentUser.OpenSubKey
+            var registryKey = Registry.CurrentUser.OpenSubKey
                 ("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-
+            if (registryKey == null)
+            {
+                MessageBox.Show(
+                    @"Could not open registry key for the current user (SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run)",
+                    @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
             if (menuItem.Checked)
-                rk.SetValue("ProxyUnsetter", Application.ExecutablePath);
+                registryKey.SetValue("ProxyUnsetter", Application.ExecutablePath);
             else
-                rk.DeleteValue("ProxyUnsetter", false);
+                registryKey.DeleteValue("ProxyUnsetter", false);
+        }
+
+        private bool GetLaunchAtWindowsStartupState()
+        {
+            var registryKey = Registry.CurrentUser.OpenSubKey
+                ("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            if (registryKey == null)
+            {
+                MessageBox.Show(
+                    @"Could not open registry key for the current user (SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run)",
+                    @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            return registryKey.GetValue(AppName) != null;
         }
 
         private void OnToggleNotifyOfProxySet(object sender, EventArgs e)
         {
             var menuItem = (MenuItem)sender;
             menuItem.Checked = !menuItem.Checked;
-            _notifyOfProxySet = menuItem.Checked;
+            Settings.Default.NotifyOfProxySet = menuItem.Checked;
+            Settings.Default.Save();
         }
 
         private void OnToggleAutomaticProxyUnset(object sender, EventArgs e)
         {
             var menuItem = (MenuItem)sender;
             menuItem.Checked = !menuItem.Checked;
-            _unsetProxyAutomatically = menuItem.Checked;
+            Settings.Default.UnsetProxyAutomatically = menuItem.Checked;
+            Settings.Default.Save();
         }
 
         private void _checkTimer_Tick(object sender, EventArgs e)
         {
             var proxySet = SetTrayIcon();
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (proxySet && proxySet != _lastProxyState)
             {
                 Program.SimpleLogLines.Add($"{DateTime.Now:t} Proxy was set.");
-                if (_notifyOfProxySet)
+                if (Settings.Default.NotifyOfProxySet)
                 {
                     _trayIcon.ShowBalloonTip(3000, @"Proxy settings have changed", @"Proxy was set", ToolTipIcon.Info);
                 }
                 _lastProxyState = true;
-                if (_unsetProxyAutomatically)
+                if (Settings.Default.UnsetProxyAutomatically)
                 {
                     ProxyHelper.UnsetProxy();
                     Program.SimpleLogLines.Add($"{DateTime.Now:t} Proxy was automatically unset.");
