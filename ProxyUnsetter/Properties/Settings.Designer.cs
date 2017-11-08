@@ -46,5 +46,17 @@ namespace ProxyUnsetter.Properties {
                 this["UnsetProxyAutomatically"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool CheckForNewReleaseWeekly {
+            get {
+                return ((bool)(this["CheckForNewReleaseWeekly"]));
+            }
+            set {
+                this["CheckForNewReleaseWeekly"] = value;
+            }
+        }
     }
 }

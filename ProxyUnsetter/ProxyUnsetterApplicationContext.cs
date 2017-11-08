@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Drawing;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using ProxyUnsetter.Properties;
+using Application = System.Windows.Forms.Application;
 using Timer = System.Windows.Forms.Timer;
 
 namespace ProxyUnsetter
@@ -13,6 +17,7 @@ namespace ProxyUnsetter
         private readonly NotifyIcon _trayIcon;
         private const string AppName = "ProxyUnsetter";
         private bool _lastProxyState;
+        private Timer _checkForNewReleaseTimer;
 
         public ProxyUnsetterApplicationContext()
         {
@@ -27,12 +32,19 @@ namespace ProxyUnsetter
                 {
                     Checked = Settings.Default.NotifyOfProxySet
                 };
-            var launchAtWindowsStartupMenuItem = new MenuItem("Launch at Windows startup", OnToggleWindowsStartup)
-            {
-                Checked = GetLaunchAtWindowsStartupState()
-            };
+            var launchAtWindowsStartupMenuItem =
+                new MenuItem("Launch at Windows startup", OnToggleWindowsStartup)
+                {
+                    Checked = GetLaunchAtWindowsStartupState()
+                };
+            var checkForNewReleaseWeeklyMenuItem =
+                new MenuItem("Check for new release weekly", OnToggleCheckForNewReleaseWeekly)
+                {
+                    Checked = Settings.Default.CheckForNewReleaseWeekly
+                };
             trayMenu.MenuItems.Add(automaticUnsetProxyMenuItem);
             trayMenu.MenuItems.Add(notifyOfProxySetMenuItem);
+            trayMenu.MenuItems.Add(checkForNewReleaseWeeklyMenuItem);
             trayMenu.MenuItems.Add("Force unset proxy now (double click)", OnUnsetProxy);
             trayMenu.MenuItems.Add(launchAtWindowsStartupMenuItem);
             trayMenu.MenuItems.Add("Set to 127.0.0.1:8080", OnSetProxy);
@@ -51,9 +63,80 @@ namespace ProxyUnsetter
 
             _trayIcon.DoubleClick += OnUnsetProxy;
 
+            if (Settings.Default.CheckForNewReleaseWeekly)
+            {
+                InitializeCheckForNewReleaseTimer();
+                _checkForNewReleaseTimer.Start();
+            }
             var checkTimer = new Timer { Interval = 5000 };
             checkTimer.Tick += _checkTimer_Tick;
             checkTimer.Start();
+        }
+
+        private void InitializeCheckForNewReleaseTimer()
+        {
+            _checkForNewReleaseTimer = new Timer { Interval = 7 * 24 * 60 * 1000 }; // week interval
+            _checkForNewReleaseTimer.Tick += CheckForNewReleaseTimer_Tick;
+        }
+
+        private async void CheckForNewReleaseTimer_Tick(object sender, EventArgs e)
+        {
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("proxyunsetter", Application.ProductVersion));
+            var latestReleaseJson = await
+                httpClient.GetStringAsync("https://api.github.com/repos/tjeerdhans/proxyunsetter/releases/latest");
+
+            var latestRelease = latestReleaseJson.FromJson<GitHubRelease>();
+            if (latestRelease == null)
+            {
+                Program.SimpleLogLines.Add($"{DateTime.Now:g} Couldn't parse json response while checking for a new release at GitHub.");
+                return;
+            }
+
+            var latestReleaseTagSplitted = latestRelease.tag_name.Split('.');
+            var currentReleaseSplitted = Application.ProductVersion.Split('.');
+            var latestMajor = int.Parse(latestReleaseTagSplitted[0]);
+            var latestMinor = int.Parse(latestReleaseTagSplitted[1]);
+            var currentMajor = int.Parse(currentReleaseSplitted[0]);
+            var currentMinor = int.Parse(currentReleaseSplitted[1]);
+            var newerAvailable = false;
+            if (latestMajor > currentMajor)
+            {
+                newerAvailable = true;
+            }
+            else if (latestMajor == currentMajor && latestMinor > currentMinor)
+            {
+                newerAvailable = true;
+            }
+
+            if (newerAvailable)
+            {
+                if (MessageBox.Show(
+                        $@"There is a new version available ({latestRelease.tag_name}, '{latestRelease.name}'). Click 'OK' to browse to the release at https://github.com/tjeerdhans/proxyunsetter/releases/latest. Download the latest executable and replace your current one with it.",
+                        @"New version", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                {
+                    System.Diagnostics.Process.Start("https://github.com/tjeerdhans/proxyunsetter/releases/latest");
+                }
+            }
+        }
+
+        private void OnToggleCheckForNewReleaseWeekly(object sender, EventArgs e)
+        {
+            var menuItem = (MenuItem)sender;
+            menuItem.Checked = !menuItem.Checked;
+            Settings.Default.CheckForNewReleaseWeekly = menuItem.Checked;
+            Settings.Default.Save();
+            if (menuItem.Checked)
+            {
+                InitializeCheckForNewReleaseTimer();
+                _checkForNewReleaseTimer.Start();
+                CheckForNewReleaseTimer_Tick(this, EventArgs.Empty);
+            }
+            else
+            {
+                _checkForNewReleaseTimer.Stop();
+                _checkForNewReleaseTimer.Dispose();
+            }
         }
 
         private void OnToggleWindowsStartup(object sender, EventArgs e)
@@ -112,7 +195,7 @@ namespace ProxyUnsetter
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (proxySet && proxySet != _lastProxyState)
             {
-                Program.SimpleLogLines.Add($"{DateTime.Now:t} Proxy was set.");
+                Program.SimpleLogLines.Add($"{DateTime.Now:g} Proxy was set.");
                 if (Settings.Default.NotifyOfProxySet)
                 {
                     _trayIcon.ShowBalloonTip(3000, @"Proxy settings have changed", @"Proxy was set", ToolTipIcon.Info);
@@ -121,7 +204,7 @@ namespace ProxyUnsetter
                 if (Settings.Default.UnsetProxyAutomatically)
                 {
                     ProxyHelper.UnsetProxy();
-                    Program.SimpleLogLines.Add($"{DateTime.Now:t} Proxy was automatically unset.");
+                    Program.SimpleLogLines.Add($"{DateTime.Now:g} Proxy was automatically unset.");
                     _trayIcon.Icon = SystemIcons.Asterisk;
                     Thread.Sleep(1000);
                     _lastProxyState = SetTrayIcon();
