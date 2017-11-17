@@ -7,7 +7,7 @@
     <ProjectGuid>{E39399E7-BEDE-4531-B906-5C3B9E0D7B15}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>ProxyUnsetter</RootNamespace>
-    <AssemblyName>ProxyUnsetter</AssemblyName>
+    <AssemblyName>ProxyUnsetterMain</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -66,8 +66,12 @@
     <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IPAddressRange, Version=2.1.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IPAddressRange.2.1.0.1\lib\net45\IPAddressRange.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Design" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -85,14 +89,43 @@
     <Compile Include="AboutBox.Designer.cs">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="GitHubRelease.cs" />
-    <Compile Include="JSONParser.cs" />
+    <Compile Include="Helpers\GitHubRelease.cs" />
+    <Compile Include="Helpers\ReleaseChecker.cs" />
+    <Compile Include="Helpers\SettingsHelper.cs" />
+    <Compile Include="IpAddressControl\DotControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="IpAddressControl\FieldChangedEventArgs.cs" />
+    <Compile Include="IpAddressControl\FieldControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="IpAddressControl\IPAddressControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="IpAddressControl\IPAddressControlDesigner.cs" />
+    <Compile Include="IpAddressControl\NativeMethods.cs" />
+    <Compile Include="Helpers\JSONParser.cs" />
+    <Compile Include="IpAddressEntryForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="IpAddressEntryForm.Designer.cs">
+      <DependentUpon>IpAddressEntryForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ProxyHelper.cs" />
+    <Compile Include="Helpers\ProxyHelper.cs" />
     <Compile Include="ProxyUnsetterApplicationContext.cs" />
+    <Compile Include="SettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsForm.Designer.cs">
+      <DependentUpon>SettingsForm.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IpAddressEntryForm.resx">
+      <DependentUpon>IpAddressEntryForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -104,6 +137,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="SettingsForm.resx">
+      <DependentUpon>SettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -139,4 +176,7 @@
     <None Include="Resources\UnsetProxy.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>"C:\Program Files (x86)\Microsoft\ILMerge\ILMerge.exe" /target:winexe /targetplatform:"v4,C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1" /out:ProxyUnsetter.exe ProxyUnsetterMain.exe IPAddressRange.dll</PostBuildEvent>
+  </PropertyGroup>
 </Project>

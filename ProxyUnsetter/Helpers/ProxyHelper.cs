@@ -1,9 +1,15 @@
 ﻿using System;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using NetTools;
+using ProxyUnsetter.Properties;
 
-namespace ProxyUnsetter
+namespace ProxyUnsetter.Helpers
 {
     internal static class ProxyHelper
     {
@@ -59,6 +65,47 @@ namespace ProxyUnsetter
             registry.SetValue("ProxyEnable", 1);
             registry.SetValue("ProxyServer", "127.0.0.1:8080");
             RefreshProxySettings();
+        }
+
+        public static bool IpIsWhiteListed()
+        {
+            var localIpAddress = LocalIpAddress();
+            if (Equals(localIpAddress, IPAddress.None))
+            {
+                return true;
+            }
+            foreach (var ipRange in Settings.Default.IpWhitelist)
+            {
+                var range = IPAddressRange.Parse(ipRange);
+                if (range.Contains(localIpAddress))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static IPAddress LocalIpAddress()
+        {
+            foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (item.OperationalStatus == OperationalStatus.Up)
+                {
+                    IPInterfaceProperties adapterProperties = item.GetIPProperties();
+
+                    if (adapterProperties.GatewayAddresses.Any())
+                    {
+                        foreach (UnicastIPAddressInformation ip in adapterProperties.UnicastAddresses)
+                        {
+                            if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
+                            {
+                                return ip.Address;
+                            }
+                        }
+                    }
+                }
+            }
+            return IPAddress.None;
         }
     }
 }

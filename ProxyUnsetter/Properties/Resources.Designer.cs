@@ -61,6 +61,24 @@ namespace ProxyUnsetter.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 333.
+        /// </summary>
+        internal static string FieldMeasureText {
+            get {
+                return ResourceManager.GetString("FieldMeasureText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ..
+        /// </summary>
+        internal static string FieldSeparator {
+            get {
+                return ResourceManager.GetString("FieldSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon SetProxy {

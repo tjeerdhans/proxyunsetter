@@ -1,4 +1,4 @@
-﻿namespace ProxyUnsetter
+﻿namespace ProxyUnsetter.Helpers
 {
     public class GitHubRelease
     {
