@@ -39,7 +39,7 @@ using Action = ProxyUnsetter.IpAddressControl.Action;
 namespace ProxyUnsetter.IpAddressControl
 {
   [DefaultEvent("TextChanged")]
-  [Designer(typeof(IpAddressControlDesigner))]
+  [Designer(typeof(IPAddressControlDesigner))]
   public class IPAddressControl : ContainerControl
   {
     #region Public Constants

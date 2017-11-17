@@ -24,13 +24,12 @@
 
 
 using System.Collections;
-using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using System.Windows.Forms.Design.Behavior;
 
 namespace ProxyUnsetter.IpAddressControl
 {
-  internal class IpAddressControlDesigner : ControlDesigner
+  internal class IPAddressControlDesigner : ControlDesigner
   {
     public override SelectionRules SelectionRules
     {
