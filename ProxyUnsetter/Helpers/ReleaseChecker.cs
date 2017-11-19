@@ -25,7 +25,7 @@ namespace ProxyUnsetter.Helpers
 
         public void CheckNow()
         {
-            CheckForNewReleaseTimer_Tick(this, EventArgs.Empty);
+            CheckForNewReleaseTimer_Tick(this, new ReleaseCheckEventArgs(true));
         }
 
         private async void CheckForNewReleaseTimer_Tick(object sender, EventArgs e)
@@ -66,6 +66,10 @@ namespace ProxyUnsetter.Helpers
                 {
                     System.Diagnostics.Process.Start("https://github.com/tjeerdhans/proxyunsetter/releases/latest");
                 }
+            }
+            else if (e is ReleaseCheckEventArgs && ((ReleaseCheckEventArgs)e).DeliberateCheck)
+            {
+                MessageBox.Show(@"No new release available.", @"Proxy Unsetter", MessageBoxButtons.OK);
             }
         }
     }

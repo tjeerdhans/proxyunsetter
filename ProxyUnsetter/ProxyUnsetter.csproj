@@ -91,6 +91,7 @@
     </Compile>
     <Compile Include="Helpers\GitHubRelease.cs" />
     <Compile Include="Helpers\ReleaseChecker.cs" />
+    <Compile Include="Helpers\ReleaseCheckEventArgs.cs" />
     <Compile Include="Helpers\SettingsHelper.cs" />
     <Compile Include="IpAddressControl\DotControl.cs">
       <SubType>Component</SubType>
