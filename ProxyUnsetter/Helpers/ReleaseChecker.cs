@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Windows.Forms;
@@ -28,13 +29,30 @@ namespace ProxyUnsetter.Helpers
             CheckForNewReleaseTimer_Tick(this, new ReleaseCheckEventArgs(true));
         }
 
+        public void CheckNowSilent()
+        {
+            CheckForNewReleaseTimer_Tick(this, EventArgs.Empty);
+        }
+
         private async void CheckForNewReleaseTimer_Tick(object sender, EventArgs e)
         {
-            var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("proxyunsetter", Application.ProductVersion));
-            var latestReleaseJson = await
-                httpClient.GetStringAsync("https://api.github.com/repos/tjeerdhans/proxyunsetter/releases/latest");
-
+            var latestReleaseJson = string.Empty;
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("proxyunsetter", Application.ProductVersion));
+                try
+                {
+                    latestReleaseJson = await
+                        httpClient.GetStringAsync(
+                            "https://api.github.com/repos/tjeerdhans/proxyunsetter/releases/latest");
+                }
+                catch (WebException exception)
+                {
+                    Program.SimpleLogLines.Add(
+                        $"{DateTime.Now:g} Couldn't reach github in order to check for new releases. Exception message: {exception.Message}");
+                    return;
+                }
+            }
             var latestRelease = latestReleaseJson.FromJson<GitHubRelease>();
             if (latestRelease == null)
             {
@@ -60,6 +78,7 @@ namespace ProxyUnsetter.Helpers
 
             if (newerAvailable)
             {
+                Program.SimpleLogLines.Add($"{DateTime.Now:g} Checked for new release: New release available, ({latestRelease.tag_name}, '{latestRelease.name}').");
                 if (MessageBox.Show(
                         $@"There is a new version available ({latestRelease.tag_name}, '{latestRelease.name}'). Click 'OK' to browse to the release at https://github.com/tjeerdhans/proxyunsetter/releases/latest. Download the latest executable and replace your current one with it.",
                         @"New version", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
@@ -67,10 +86,15 @@ namespace ProxyUnsetter.Helpers
                     System.Diagnostics.Process.Start("https://github.com/tjeerdhans/proxyunsetter/releases/latest");
                 }
             }
-            else if (e is ReleaseCheckEventArgs && ((ReleaseCheckEventArgs)e).DeliberateCheck)
+            else
             {
-                MessageBox.Show(@"No new release available.", @"Proxy Unsetter", MessageBoxButtons.OK);
+                Program.SimpleLogLines.Add($"{DateTime.Now:g} Checked for new release: no new release available.");
+                if (e is ReleaseCheckEventArgs args && args.DeliberateCheck)
+                {
+                    MessageBox.Show(@"No new release available.", @"Proxy Unsetter", MessageBoxButtons.OK);
+                }
             }
+
         }
     }
 }

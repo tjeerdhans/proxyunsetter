@@ -18,17 +18,29 @@ namespace ProxyUnsetter
 
         public ProxyUnsetterApplicationContext()
         {
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             InitTrayMenu();
 
             _releaseChecker = new ReleaseChecker();
             if (Settings.Default.CheckForNewReleaseWeekly)
             {
                 _releaseChecker.Start();
-                _releaseChecker.CheckNow();
+                _releaseChecker.CheckNowSilent();
             }
             var checkTimer = new Timer { Interval = 5000 };
-            checkTimer.Tick += _checkTimer_Tick;
+            checkTimer.Tick += (sender, args) => CheckProxy();
             checkTimer.Start();
+
+            System.Net.NetworkInformation.NetworkChange.NetworkAddressChanged +=
+                (sender, args) => CheckProxy(true);
+        }
+
+        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Exception exception = (Exception)e.ExceptionObject;
+            Program.SimpleLogLines.Add($"{DateTime.Now:g} An error occurred in the application ({exception.Message}).");
+            MessageBox.Show(@"An error occurred in the application. Check the log in the about screen for details.",
+                @"Proxy Unsetter", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void InitTrayMenu()
@@ -61,22 +73,22 @@ namespace ProxyUnsetter
             settingsForm.Show();
         }
 
-        private void _checkTimer_Tick(object sender, EventArgs e)
+        private void CheckProxy(bool networkChanged = false)
         {
             var proxySet = SetTrayIcon();
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (proxySet && proxySet != _lastProxyState)
+            if (proxySet && (proxySet != _lastProxyState || networkChanged))
             {
-                Program.SimpleLogLines.Add($"{DateTime.Now:g} Proxy was set.");
+                Program.SimpleLogLines.Add($"{DateTime.Now:g} Proxy is set.{(networkChanged ? " Network changed." : "")}");
                 if (Settings.Default.NotifyOfProxySet)
                 {
-                    _trayIcon.ShowBalloonTip(3000, @"Proxy settings have changed", @"Proxy was set", ToolTipIcon.Info);
+                    _trayIcon.ShowBalloonTip(3000, @"Proxy settings have changed", @"Proxy is set", ToolTipIcon.Info);
                 }
                 _lastProxyState = true;
-                var localIpAddress = ProxyHelper.LocalIpAddress();
                 var ipIsWhiteListed = ProxyHelper.IpIsWhiteListed();
                 if (ipIsWhiteListed)
                 {
+                    var localIpAddress = ProxyHelper.LocalIpAddress();
                     Program.SimpleLogLines.Add($"{DateTime.Now:g} Proxy was left alone, ip is whitelisted ({localIpAddress}).");
                     return;
                 }
