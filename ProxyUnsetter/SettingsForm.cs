@@ -26,10 +26,18 @@ namespace ProxyUnsetter
 
             buttonDelete.Enabled = false;
 
-            FillIpWhitelist();
+            InitializeIpWhitelist();
+            InitializeManualProxy();
         }
 
-        private void FillIpWhitelist()
+        private void InitializeManualProxy()
+        {
+            textBoxManualProxy.Text = Settings.Default.ManuallySetProxy;
+            textBoxManualProxy.LostFocus +=
+                (sender, args) => SettingsHelper.SetManuallySetProxy(textBoxManualProxy.Text);
+        }
+
+        private void InitializeIpWhitelist()
         {
             foreach (var ip in Settings.Default.IpWhitelist)
             {

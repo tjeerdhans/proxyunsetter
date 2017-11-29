@@ -36,7 +36,7 @@ namespace ProxyUnsetter.Helpers
 
         private async void CheckForNewReleaseTimer_Tick(object sender, EventArgs e)
         {
-            var latestReleaseJson = string.Empty;
+            string latestReleaseJson;
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("proxyunsetter", Application.ProductVersion));

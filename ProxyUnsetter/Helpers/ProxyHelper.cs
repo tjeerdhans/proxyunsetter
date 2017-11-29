@@ -21,19 +21,42 @@ namespace ProxyUnsetter.Helpers
         private const int INTERNET_OPTION_REFRESH = 37;
         // ReSharper restore InconsistentNaming
 
+        // Computer\HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings
         private const string ProxyRegistryKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 
-        public static bool GetCurrentProxyState()
+        public static string ManuallySetProxyServer = "127.0.0.1:8080";
+        public static string CurrentProxyServer = string.Empty;
+        public static ProxyState GetCurrentProxyState()
         {
             RegistryKey registry = Registry.CurrentUser.OpenSubKey(ProxyRegistryKey, true);
             if (registry == null)
             {
                 MessageBox.Show(@"Couldn't find the registry key to update proxy settings.", @"Error", MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-                return true;
+                return ProxyState.Unknown;
             }
             var proxyEnableValue = registry.GetValue("ProxyEnable");
-            return proxyEnableValue == null || (int)proxyEnableValue != 0;
+            var proxyServer = (string)registry.GetValue("ProxyServer");
+
+            if (proxyEnableValue != null && (int)proxyEnableValue != 0)
+            {
+                if (proxyServer == null)
+                {
+                    return ProxyState.Unknown; // weird stuff, proxy enabled, but no proxy address
+                }
+                if (proxyServer == ManuallySetProxyServer)
+                {
+                    CurrentProxyServer = proxyServer;
+                    return ProxyState.ManuallySet;                    
+                }
+                if (IpIsWhiteListed())
+                {
+                    CurrentProxyServer = proxyServer;
+                    return ProxyState.IgnoredBecauseOfWhitelistedIp;
+                }
+                return ProxyState.AutomaticallySet;
+            }
+            return ProxyState.AutomaticallyUnset;
         }
 
         private static void RefreshProxySettings()
@@ -65,7 +88,7 @@ namespace ProxyUnsetter.Helpers
                 return;
             }
             registry.SetValue("ProxyEnable", 1);
-            registry.SetValue("ProxyServer", "127.0.0.1:8080");
+            registry.SetValue("ProxyServer", ManuallySetProxyServer);
             RefreshProxySettings();
         }
 
@@ -76,7 +99,7 @@ namespace ProxyUnsetter.Helpers
                 return false;
             }
             var localIpAddress = LocalIpAddress();
-            if (Equals(localIpAddress, IPAddress.None)) 
+            if (Equals(localIpAddress, IPAddress.None))
             {
                 return false;
             }

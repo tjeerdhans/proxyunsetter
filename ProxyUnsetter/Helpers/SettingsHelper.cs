@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 using Microsoft.Win32;
 using ProxyUnsetter.Properties;
 
@@ -6,6 +7,7 @@ namespace ProxyUnsetter.Helpers
 {
     internal static class SettingsHelper
     {
+        public static event EventHandler SettingsChanged;
         public const string AppName = "ProxyUnsetter";
         public static bool GetLaunchAtWindowsStartupState()
         {
@@ -64,6 +66,14 @@ namespace ProxyUnsetter.Helpers
         {
             var split = setting.Split('/');
             return new[] { split[0], split[1] };
+        }
+
+        public static void SetManuallySetProxy(string manualProxy)
+        {
+            Settings.Default.ManuallySetProxy = manualProxy;
+            Settings.Default.Save();
+            ProxyHelper.ManuallySetProxyServer = manualProxy;
+            SettingsChanged?.Invoke(null, EventArgs.Empty);
         }
     }
 }
