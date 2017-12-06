@@ -11,3 +11,5 @@ Using:
 Icons adapted from https://icons8.com/
 (http://www.iconarchive.com/show/windows-8-icons-by-icons8/Data-Filled-Filter-icon.html)
 
+
+If you'd like to buy me a beer, here's my bitcoin address: 194RCQ2K4CrJFUcxb3a5XFC52MAfsFNVUm
