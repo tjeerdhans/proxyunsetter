@@ -71,8 +71,10 @@ namespace ProxyUnsetter
 
         private void OnOpenSettingsForm(object sender, EventArgs e)
         {
-            var settingsForm = new SettingsForm(_releaseChecker);
-            settingsForm.Show();
+            using (var settingsForm = new SettingsForm(_releaseChecker))
+            {
+                settingsForm.ShowDialog();
+            }
         }
 
         private void CheckProxy(bool networkChanged = false)
@@ -110,8 +112,10 @@ namespace ProxyUnsetter
 
         private void OnShowAboutBox(object sender, EventArgs e)
         {
-            var aboutBox = new AboutBox();
-            aboutBox.Show();
+            using (var aboutBox = new AboutBox())
+            {
+                aboutBox.ShowDialog();
+            }
         }
 
         private ProxyState SetTrayIconAndReturnProxyState()
