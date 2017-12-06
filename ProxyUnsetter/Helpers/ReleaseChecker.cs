@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Windows.Forms;
+using ProxyUnsetter.Properties;
 using Timer = System.Windows.Forms.Timer;
 
 namespace ProxyUnsetter.Helpers
@@ -13,7 +14,7 @@ namespace ProxyUnsetter.Helpers
 
         public void Start()
         {
-            _checkForNewReleaseTimer = new Timer { Interval = 7 * 24 * 60 * 1000 }; // week interval
+            _checkForNewReleaseTimer = new Timer { Interval = 60 * 60 * 1000 }; // check every hour if we need to check for new releases
             _checkForNewReleaseTimer.Tick += CheckForNewReleaseTimer_Tick;
             _checkForNewReleaseTimer.Start();
         }
@@ -36,6 +37,11 @@ namespace ProxyUnsetter.Helpers
 
         private async void CheckForNewReleaseTimer_Tick(object sender, EventArgs e)
         {
+            var deliberateCheck = e is ReleaseCheckEventArgs args && args.DeliberateCheck;
+            if (Settings.Default.LastReleaseCheck > DateTime.Now.AddDays(-7) && !deliberateCheck)
+            {
+                return; // it hasn't been a week since the last check.
+            }
             string latestReleaseJson;
             using (var httpClient = new HttpClient())
             {
@@ -46,10 +52,14 @@ namespace ProxyUnsetter.Helpers
                         httpClient.GetStringAsync(
                             "https://api.github.com/repos/tjeerdhans/proxyunsetter/releases/latest");
                 }
-                catch (WebException exception)
+                catch (HttpRequestException exception)
                 {
                     Program.SimpleLogLines.Add(
                         $"{DateTime.Now:g} Couldn't reach github in order to check for new releases. Exception message: {exception.Message}");
+                    if (deliberateCheck)
+                    {
+                        MessageBox.Show($"Couldn't reach github in order to check for new releases.\r\nException message: {exception.Message}\r\n{exception.InnerException?.Message}", @"Proxy Unsetter", MessageBoxButtons.OK);
+                    }
                     return;
                 }
             }
@@ -89,12 +99,13 @@ namespace ProxyUnsetter.Helpers
             else
             {
                 Program.SimpleLogLines.Add($"{DateTime.Now:g} Checked for new release: no new release available.");
-                if (e is ReleaseCheckEventArgs args && args.DeliberateCheck)
+                if (deliberateCheck)
                 {
                     MessageBox.Show(@"No new release available.", @"Proxy Unsetter", MessageBoxButtons.OK);
                 }
             }
-
+            Settings.Default.LastReleaseCheck = DateTime.Now;
+            Settings.Default.Save();
         }
     }
 }

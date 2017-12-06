@@ -18,5 +18,8 @@
     <Setting Name="ManuallySetProxy" Type="System.String" Scope="User">
       <Value Profile="(Default)">127.0.0.1:8080</Value>
     </Setting>
+    <Setting Name="LastReleaseCheck" Type="System.DateTime" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>
