@@ -1,6 +1,6 @@
 <img align="right" width="100" height="100" src="https://raw.githubusercontent.com/tjeerdhans/proxyunsetter/master/ProxyUnsetter/Resources/UnsetProxy.png">
 
-# proxyunsetter
+# ProxyUnsetter
 Windows Tray application that will unset your proxy when it's been set by another process or group policy.
 
 Using:
