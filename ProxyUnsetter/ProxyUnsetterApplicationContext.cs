@@ -102,10 +102,11 @@ namespace ProxyUnsetter
                 if (Settings.Default.UnsetProxyAutomatically)
                 {
                     ProxyHelper.UnsetProxy();
+                    _lastProxyState = ProxyState.AutomaticallyUnset;
                     Program.SimpleLogLines.Add($"{DateTime.Now:g} Proxy was automatically unset.");
                     _trayIcon.Icon = SystemIcons.Asterisk;
-                    Thread.Sleep(1000);
-                    _lastProxyState = SetTrayIconAndReturnProxyState();
+                    Thread.Sleep(1000); // wait a second, so the transition is visible in the systray.
+                    SetTrayIconAndReturnProxyState();
                 }
             }
         }
