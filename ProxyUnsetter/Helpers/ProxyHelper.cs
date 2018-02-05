@@ -40,14 +40,14 @@ namespace ProxyUnsetter.Helpers
 
             if (proxyEnableValue != null && (int)proxyEnableValue != 0)
             {
-                if (proxyServer == null)
+                if (string.IsNullOrWhiteSpace(proxyServer))
                 {
                     return ProxyState.Unknown; // weird stuff, proxy enabled, but no proxy address
                 }
                 if (proxyServer == ManuallySetProxyServer)
                 {
                     CurrentProxyServer = proxyServer;
-                    return ProxyState.ManuallySet;                    
+                    return ProxyState.ManuallySet;
                 }
                 if (IpIsWhiteListed())
                 {
