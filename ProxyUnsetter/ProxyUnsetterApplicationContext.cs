@@ -81,7 +81,7 @@ namespace ProxyUnsetter
         {
             var proxyState = SetTrayIconAndReturnProxyState();
 
-            if (proxyState != _lastProxyState || networkChanged)
+            if (proxyState == ProxyState.Unknown || (proxyState != _lastProxyState || networkChanged))
             {
                 var humanizedProxyState = proxyState.Humanize();
                 if (networkChanged)
