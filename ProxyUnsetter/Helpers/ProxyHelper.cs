@@ -14,10 +14,12 @@ namespace ProxyUnsetter.Helpers
     internal static class ProxyHelper
     {
         [DllImport("wininet.dll")]
-        private static extern bool InternetSetOption(IntPtr hInternet, int dwOption, IntPtr lpBuffer, int dwBufferLength);
+        private static extern bool InternetSetOption(IntPtr hInternet, int dwOption, IntPtr lpBuffer,
+            int dwBufferLength);
 
         // ReSharper disable InconsistentNaming
         private const int INTERNET_OPTION_SETTINGS_CHANGED = 39;
+
         private const int INTERNET_OPTION_REFRESH = 37;
         // ReSharper restore InconsistentNaming
 
@@ -25,37 +27,57 @@ namespace ProxyUnsetter.Helpers
         private const string ProxyRegistryKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 
         public static string ManuallySetProxyServer = "127.0.0.1:8080";
+
+        public static ProxyState LastProxyState;
+
+        /// <summary>
+        /// Current proxy server or auto-config url
+        /// </summary>
         public static string CurrentProxyServer = string.Empty;
+
         public static ProxyState GetCurrentProxyState()
         {
             RegistryKey registry = Registry.CurrentUser.OpenSubKey(ProxyRegistryKey, true);
             if (registry == null)
             {
-                MessageBox.Show(@"Couldn't find the registry key to update proxy settings.", @"Error", MessageBoxButtons.OK,
+                MessageBox.Show(@"Couldn't find the registry key to update proxy settings.", @"Error",
+                    MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 return ProxyState.Unknown;
             }
-            var proxyEnableValue = registry.GetValue("ProxyEnable");
-            var proxyServer = (string)registry.GetValue("ProxyServer");
 
-            if (proxyEnableValue != null && (int)proxyEnableValue != 0)
+            var proxyEnableValue = registry.GetValue("ProxyEnable");
+            var proxyServer = (string) registry.GetValue("ProxyServer");
+            var autoConfigUrl = (string) registry.GetValue("AutoConfigURL"); // Proxy auto-config (PAC) url    
+
+            if (proxyEnableValue != null && (int) proxyEnableValue != 0)
             {
                 if (string.IsNullOrWhiteSpace(proxyServer))
                 {
                     return ProxyState.Unknown; // weird stuff, proxy enabled, but no proxy address
                 }
+
                 if (proxyServer == ManuallySetProxyServer)
                 {
                     CurrentProxyServer = proxyServer;
                     return ProxyState.ManuallySet;
                 }
+
                 if (IpIsWhiteListed())
                 {
                     CurrentProxyServer = proxyServer;
                     return ProxyState.IgnoredBecauseOfWhitelistedIp;
                 }
+
                 return ProxyState.AutomaticallySet;
             }
+
+            if (autoConfigUrl != null)
+            {
+                CurrentProxyServer = autoConfigUrl;
+                return ProxyState.AutomaticallySetWithAutoconfigScript;
+            }
+
             return ProxyState.AutomaticallyUnset;
         }
 
@@ -70,11 +92,19 @@ namespace ProxyUnsetter.Helpers
             RegistryKey registry = Registry.CurrentUser.OpenSubKey(ProxyRegistryKey, true);
             if (registry == null)
             {
-                MessageBox.Show(@"Couldn't find the registry key to update proxy settings.", @"Error", MessageBoxButtons.OK,
+                MessageBox.Show(@"Couldn't find the registry key to update proxy settings.", @"Error",
+                    MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 return;
             }
+
             registry.SetValue("ProxyEnable", 0);
+
+            if (Settings.Default.UnsetPac)
+            {
+                registry.DeleteValue("AutoConfigURL", false);
+            }
+
             RefreshProxySettings();
         }
 
@@ -83,10 +113,12 @@ namespace ProxyUnsetter.Helpers
             RegistryKey registry = Registry.CurrentUser.OpenSubKey(ProxyRegistryKey, true);
             if (registry == null)
             {
-                MessageBox.Show(@"Couldn't find the registry key to update proxy settings.", @"Error", MessageBoxButtons.OK,
+                MessageBox.Show(@"Couldn't find the registry key to update proxy settings.", @"Error",
+                    MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 return;
             }
+
             registry.SetValue("ProxyEnable", 1);
             registry.SetValue("ProxyServer", ManuallySetProxyServer);
             RefreshProxySettings();
@@ -98,11 +130,13 @@ namespace ProxyUnsetter.Helpers
             {
                 return false;
             }
+
             var localIpAddress = LocalIpAddress();
             if (Equals(localIpAddress, IPAddress.None))
             {
                 return false;
             }
+
             foreach (var ipRange in Settings.Default.IpWhitelist)
             {
                 var range = IPAddressRange.Parse(ipRange);
@@ -111,6 +145,7 @@ namespace ProxyUnsetter.Helpers
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -130,6 +165,7 @@ namespace ProxyUnsetter.Helpers
                     }
                 }
             }
+
             return IPAddress.None;
         }
     }

@@ -5,7 +5,8 @@
         Unknown,
         AutomaticallyUnset,
         AutomaticallySet,
+        AutomaticallySetWithAutoconfigScript,
         ManuallySet,
-        IgnoredBecauseOfWhitelistedIp              
+        IgnoredBecauseOfWhitelistedIp
     }
 }

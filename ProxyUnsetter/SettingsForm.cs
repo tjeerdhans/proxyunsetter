@@ -9,20 +9,24 @@ namespace ProxyUnsetter
     internal partial class SettingsForm : Form
     {
         private readonly ReleaseChecker _releaseChecker;
+
         public SettingsForm(ReleaseChecker releaseChecker)
         {
             InitializeComponent();
             _releaseChecker = releaseChecker;
 
             checkBoxUnsetProxyAutomatically.Checked = Settings.Default.UnsetProxyAutomatically;
+            checkBoxUnsetPac.Checked = Settings.Default.UnsetPac;
             checkBoxNotifyWhenProxySet.Checked = Settings.Default.NotifyOfProxySet;
             checkBoxCheckForNewReleaseWeekly.Checked = Settings.Default.CheckForNewReleaseWeekly;
             checkBoxLaunchAtWindowsStartup.Checked = SettingsHelper.GetLaunchAtWindowsStartupState();
 
-            checkBoxUnsetProxyAutomatically.CheckedChanged += checkBoxUnsetProxyAutomatically_CheckedChanged;
-            checkBoxNotifyWhenProxySet.CheckedChanged += checkBoxNotifyWhenProxySet_CheckedChanged;
-            checkBoxCheckForNewReleaseWeekly.CheckedChanged += checkBoxCheckForNewReleaseWeekly_CheckedChanged;
-            checkBoxLaunchAtWindowsStartup.CheckedChanged += checkBoxLaunchAtWindowsStartup_CheckedChanged;
+
+            checkBoxUnsetProxyAutomatically.CheckedChanged += CheckBoxUnsetProxyAutomatically_CheckedChanged;
+            checkBoxUnsetPac.CheckedChanged += CheckBoxUnsetPac_CheckedChanged;
+            checkBoxNotifyWhenProxySet.CheckedChanged += CheckBoxNotifyWhenProxySet_CheckedChanged;
+            checkBoxCheckForNewReleaseWeekly.CheckedChanged += CheckBoxCheckForNewReleaseWeekly_CheckedChanged;
+            checkBoxLaunchAtWindowsStartup.CheckedChanged += CheckBoxLaunchAtWindowsStartup_CheckedChanged;
 
             buttonDelete.Enabled = false;
 
@@ -39,19 +43,21 @@ namespace ProxyUnsetter
 
         private void InitializeIpWhitelist()
         {
+            labelDetectedIp.Text = ProxyHelper.LocalIpAddress().ToString();
             foreach (var ip in Settings.Default.IpWhitelist)
             {
                 listBoxIpWhitelist.Items.Add(ip);
             }
-            listBoxIpWhitelist.MouseDoubleClick += ListBoxWhitelistOnMouseDoubleClick;
+
+            listBoxIpWhitelist.MouseDoubleClick += ListBoxWhitelist_MouseDoubleClick;
         }
 
-        private void ListBoxWhitelistOnMouseDoubleClick(object sender, MouseEventArgs mouseEventArgs)
+        private void ListBoxWhitelist_MouseDoubleClick(object sender, MouseEventArgs mouseEventArgs)
         {
             var index = listBoxIpWhitelist.IndexFromPoint(mouseEventArgs.Location);
             if (index == ListBox.NoMatches)
                 return;
-            var item = (string)listBoxIpWhitelist.Items[index];
+            var item = (string) listBoxIpWhitelist.Items[index];
             var strings = SettingsHelper.GetIpAddressAndNetmaskFromSetting(item);
             var ipAddress = IPAddress.Parse(strings[0]);
             var netmask = IPAddress.Parse(strings[1]);
@@ -69,43 +75,50 @@ namespace ProxyUnsetter
             }
         }
 
-        private void checkBoxUnsetProxyAutomatically_CheckedChanged(object sender, EventArgs e)
+        private static void CheckBoxUnsetProxyAutomatically_CheckedChanged(object sender, EventArgs e)
         {
-            var checkbox = (CheckBox)sender;
+            var checkbox = (CheckBox) sender;
             SettingsHelper.ToggleAutomaticProxyUnset(checkbox.Checked);
         }
 
-        private void checkBoxNotifyWhenProxySet_CheckedChanged(object sender, EventArgs e)
+        private static void CheckBoxUnsetPac_CheckedChanged(object sender, EventArgs e)
         {
-            var checkbox = (CheckBox)sender;
+            var checkbox = (CheckBox) sender;
+            SettingsHelper.ToggleUnsetPac(checkbox.Checked);
+        }
+        
+        private static void CheckBoxNotifyWhenProxySet_CheckedChanged(object sender, EventArgs e)
+        {
+            var checkbox = (CheckBox) sender;
             SettingsHelper.ToggleNotifyOfProxySet(checkbox.Checked);
         }
 
-        private void checkBoxLaunchAtWindowsStartup_CheckedChanged(object sender, EventArgs e)
+        private static void CheckBoxLaunchAtWindowsStartup_CheckedChanged(object sender, EventArgs e)
         {
-            var checkbox = (CheckBox)sender;
+            var checkbox = (CheckBox) sender;
             SettingsHelper.ToggleWindowsStartup(checkbox.Checked);
         }
 
-        private void checkBoxCheckForNewReleaseWeekly_CheckedChanged(object sender, EventArgs e)
+        private void CheckBoxCheckForNewReleaseWeekly_CheckedChanged(object sender, EventArgs e)
         {
-            var checkbox = (CheckBox)sender;
+            var checkbox = (CheckBox) sender;
             SettingsHelper.ToggleCheckForNewReleaseWeekly(checkbox.Checked, _releaseChecker);
         }
 
-        private void buttonCheckForNewRelease_Click(object sender, EventArgs e)
+        private void ButtonCheckForNewRelease_Click(object sender, EventArgs e)
         {
             _releaseChecker.CheckNow();
         }
 
-        private void buttonOK_Click(object sender, EventArgs e)
+        private void ButtonOK_Click(object sender, EventArgs e)
         {
             Close();
         }
 
-        private void buttonAdd_Click(object sender, EventArgs e)
+        private void ButtonAdd_Click(object sender, EventArgs e)
         {
-            using (var ipAddressEntryForm = new IpAddressEntryForm(IPAddress.Parse("0.0.0.0"), IPAddress.Parse("0.0.0.0")))
+            using (var ipAddressEntryForm =
+                new IpAddressEntryForm(IPAddress.Parse("0.0.0.0"), IPAddress.Parse("0.0.0.0")))
             {
                 var dialogResult = ipAddressEntryForm.ShowDialog();
                 if (dialogResult == DialogResult.OK)
@@ -118,7 +131,7 @@ namespace ProxyUnsetter
             }
         }
 
-        private void buttonDelete_Click(object sender, EventArgs e)
+        private void ButtonDelete_Click(object sender, EventArgs e)
         {
             var index = listBoxIpWhitelist.SelectedIndex;
             listBoxIpWhitelist.Items.RemoveAt(index);
@@ -126,7 +139,7 @@ namespace ProxyUnsetter
             Settings.Default.Save();
         }
 
-        private void listBoxIpWhitelist_SelectedIndexChanged(object sender, EventArgs e)
+        private void ListBoxIpWhitelist_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listBoxIpWhitelist.SelectedIndex >= 0)
             {
@@ -136,6 +149,14 @@ namespace ProxyUnsetter
             {
                 buttonDelete.Enabled = false;
             }
+        }
+
+        private void ButtonSetManualProxy_Click(object sender, EventArgs e)
+        {
+            ProxyHelper.SetProxy();
+            ProxyHelper.LastProxyState = ProxyHelper.GetCurrentProxyState();
+            Program.SimpleLogLines.Add(
+                $"{DateTime.Now:g} Proxy was manually set to {ProxyHelper.ManuallySetProxyServer}.");
         }
     }
 }
