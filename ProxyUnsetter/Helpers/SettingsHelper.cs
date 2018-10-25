@@ -9,6 +9,7 @@ namespace ProxyUnsetter.Helpers
     {
         public static event EventHandler SettingsChanged;
         public const string AppName = "ProxyUnsetter";
+
         public static bool GetLaunchAtWindowsStartupState()
         {
             var registryKey = Registry.CurrentUser.OpenSubKey
@@ -20,6 +21,7 @@ namespace ProxyUnsetter.Helpers
                     @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
+
             return registryKey.GetValue(AppName) != null;
         }
 
@@ -44,6 +46,7 @@ namespace ProxyUnsetter.Helpers
                     @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+
             if (set)
                 registryKey.SetValue("ProxyUnsetter", Application.ExecutablePath);
             else
@@ -62,10 +65,16 @@ namespace ProxyUnsetter.Helpers
             Settings.Default.Save();
         }
 
+        public static void ToggleUnsetPac(bool set)
+        {
+            Settings.Default.UnsetPac = set;
+            Settings.Default.Save();
+        }
+
         public static string[] GetIpAddressAndNetmaskFromSetting(string setting)
         {
             var split = setting.Split('/');
-            return new[] { split[0], split[1] };
+            return new[] {split[0], split[1]};
         }
 
         public static void SetManuallySetProxy(string manualProxy)

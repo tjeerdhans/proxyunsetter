@@ -21,14 +21,16 @@ namespace ProxyUnsetter
             Application.Run(new ProxyUnsetterApplicationContext());
         }
 
-        private static void ApplicationOnThreadException(object sender, ThreadExceptionEventArgs threadExceptionEventArgs)
+        private static void ApplicationOnThreadException(object sender,
+            ThreadExceptionEventArgs threadExceptionEventArgs)
         {
             CrashHelper.ReportCrash(threadExceptionEventArgs.Exception);
         }
 
-        private static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs unhandledExceptionEventArgs)
+        private static void CurrentDomainOnUnhandledException(object sender,
+            UnhandledExceptionEventArgs unhandledExceptionEventArgs)
         {
-            CrashHelper.ReportCrash((Exception)unhandledExceptionEventArgs.ExceptionObject);
+            CrashHelper.ReportCrash((Exception) unhandledExceptionEventArgs.ExceptionObject);
         }
     }
 }
