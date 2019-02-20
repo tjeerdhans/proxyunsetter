@@ -38,11 +38,11 @@ namespace ProxyUnsetter.Helpers
         public string CurrentProxyServer = string.Empty;
 
         public string AutoConfigUrl { get; private set; }
-        
+
         public void FakePac()
         {
             var autoConfigUri = GetAutoConfigUri();
-            _pacHttpServer.Stop();
+            _pacHttpServer?.Stop();
             _pacHttpServer = new PacHttpServer(autoConfigUri.Port);
             _pacHttpServer.Run();
             HostsFileManager.Set(autoConfigUri.Host, "127.0.0.1");
@@ -98,7 +98,7 @@ namespace ProxyUnsetter.Helpers
 
         public Uri GetAutoConfigUri()
         {
-            if (GetCurrentProxyState() != ProxyState.AutomaticallySetWithAutoconfigScript)
+            if (GetCurrentProxyState() == ProxyState.AutomaticallySetWithAutoconfigScript)
             {
                 return new Uri(AutoConfigUrl);
             }

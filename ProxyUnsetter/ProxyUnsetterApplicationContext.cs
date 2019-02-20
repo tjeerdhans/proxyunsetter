@@ -90,6 +90,12 @@ namespace ProxyUnsetter
         {
             var proxyState = SetTrayIconAndReturnProxyState();
 
+            if (proxyState == ProxyState.AutomaticallySetWithAutoconfigScript &&
+                Settings.Default.UnsetOrFakePac == false)
+            {
+                _proxyManager.FakePac();
+            }
+
             if (proxyState == ProxyState.Unknown || proxyState != _proxyManager.LastProxyState || networkChanged)
             {
                 var humanizedProxyState = proxyState.Humanize();
@@ -113,12 +119,7 @@ namespace ProxyUnsetter
                     return;
                 }
 
-                if (proxyState == ProxyState.AutomaticallySetWithAutoconfigScript &&
-                    Settings.Default.UnsetOrFakePac == false)
-                {
-                    _proxyManager.FakePac();
-                }
-                else if (Settings.Default.UnsetProxyAutomatically)
+                if (Settings.Default.UnsetProxyAutomatically)
                 {
                     _proxyManager.UnsetProxy();
                     _proxyManager.LastProxyState = ProxyState.AutomaticallyUnset;
