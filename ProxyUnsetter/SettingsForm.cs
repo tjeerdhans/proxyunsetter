@@ -9,21 +9,25 @@ namespace ProxyUnsetter
     internal partial class SettingsForm : Form
     {
         private readonly ReleaseChecker _releaseChecker;
+        private readonly ProxyManager _proxyManager;
+        private readonly SettingsManager _settingsManager;
 
-        public SettingsForm(ReleaseChecker releaseChecker)
+        public SettingsForm(ReleaseChecker releaseChecker, ProxyManager proxyManager, SettingsManager settingsManager)
         {
             InitializeComponent();
             _releaseChecker = releaseChecker;
+            _proxyManager = proxyManager;
+            _settingsManager = settingsManager;
 
             checkBoxUnsetProxyAutomatically.Checked = Settings.Default.UnsetProxyAutomatically;
-            checkBoxUnsetPac.Checked = Settings.Default.UnsetPac;
+            radioButtonFakePac.Checked = !Settings.Default.UnsetOrFakePac;
+            radioButtonUnsetPac.Checked = Settings.Default.UnsetOrFakePac;
             checkBoxNotifyWhenProxySet.Checked = Settings.Default.NotifyOfProxySet;
             checkBoxCheckForNewReleaseWeekly.Checked = Settings.Default.CheckForNewReleaseWeekly;
-            checkBoxLaunchAtWindowsStartup.Checked = SettingsHelper.GetLaunchAtWindowsStartupState();
-
+            checkBoxLaunchAtWindowsStartup.Checked = _settingsManager.GetLaunchAtWindowsStartupState();
 
             checkBoxUnsetProxyAutomatically.CheckedChanged += CheckBoxUnsetProxyAutomatically_CheckedChanged;
-            checkBoxUnsetPac.CheckedChanged += CheckBoxUnsetPac_CheckedChanged;
+            radioButtonUnsetPac.CheckedChanged += RadioButtonUnsetPacOnCheckedChanged;
             checkBoxNotifyWhenProxySet.CheckedChanged += CheckBoxNotifyWhenProxySet_CheckedChanged;
             checkBoxCheckForNewReleaseWeekly.CheckedChanged += CheckBoxCheckForNewReleaseWeekly_CheckedChanged;
             checkBoxLaunchAtWindowsStartup.CheckedChanged += CheckBoxLaunchAtWindowsStartup_CheckedChanged;
@@ -34,16 +38,22 @@ namespace ProxyUnsetter
             InitializeManualProxy();
         }
 
+        private void RadioButtonUnsetPacOnCheckedChanged(object sender, EventArgs e)
+        {
+            var radioButton = (RadioButton) sender;
+            SettingsManager.ToggleUnsetOrFakePac(radioButton.Checked);
+        }
+
         private void InitializeManualProxy()
         {
             textBoxManualProxy.Text = Settings.Default.ManuallySetProxy;
             textBoxManualProxy.LostFocus +=
-                (sender, args) => SettingsHelper.SetManuallySetProxy(textBoxManualProxy.Text);
+                (sender, args) => _settingsManager.SetManuallySetProxy(textBoxManualProxy.Text);
         }
 
         private void InitializeIpWhitelist()
         {
-            labelDetectedIp.Text = ProxyHelper.LocalIpAddress().ToString();
+            labelDetectedIp.Text = _proxyManager.LocalIpAddress().ToString();
             foreach (var ip in Settings.Default.IpWhitelist)
             {
                 listBoxIpWhitelist.Items.Add(ip);
@@ -58,7 +68,7 @@ namespace ProxyUnsetter
             if (index == ListBox.NoMatches)
                 return;
             var item = (string) listBoxIpWhitelist.Items[index];
-            var strings = SettingsHelper.GetIpAddressAndNetmaskFromSetting(item);
+            var strings = SettingsManager.GetIpAddressAndNetmaskFromSetting(item);
             var ipAddress = IPAddress.Parse(strings[0]);
             var netmask = IPAddress.Parse(strings[1]);
 
@@ -78,31 +88,25 @@ namespace ProxyUnsetter
         private static void CheckBoxUnsetProxyAutomatically_CheckedChanged(object sender, EventArgs e)
         {
             var checkbox = (CheckBox) sender;
-            SettingsHelper.ToggleAutomaticProxyUnset(checkbox.Checked);
+            SettingsManager.ToggleAutomaticProxyUnset(checkbox.Checked);
         }
 
-        private static void CheckBoxUnsetPac_CheckedChanged(object sender, EventArgs e)
-        {
-            var checkbox = (CheckBox) sender;
-            SettingsHelper.ToggleUnsetPac(checkbox.Checked);
-        }
-        
         private static void CheckBoxNotifyWhenProxySet_CheckedChanged(object sender, EventArgs e)
         {
             var checkbox = (CheckBox) sender;
-            SettingsHelper.ToggleNotifyOfProxySet(checkbox.Checked);
+            SettingsManager.ToggleNotifyOfProxySet(checkbox.Checked);
         }
 
         private static void CheckBoxLaunchAtWindowsStartup_CheckedChanged(object sender, EventArgs e)
         {
             var checkbox = (CheckBox) sender;
-            SettingsHelper.ToggleWindowsStartup(checkbox.Checked);
+            SettingsManager.ToggleWindowsStartup(checkbox.Checked);
         }
 
         private void CheckBoxCheckForNewReleaseWeekly_CheckedChanged(object sender, EventArgs e)
         {
             var checkbox = (CheckBox) sender;
-            SettingsHelper.ToggleCheckForNewReleaseWeekly(checkbox.Checked, _releaseChecker);
+            SettingsManager.ToggleCheckForNewReleaseWeekly(checkbox.Checked, _releaseChecker);
         }
 
         private void ButtonCheckForNewRelease_Click(object sender, EventArgs e)
@@ -110,7 +114,7 @@ namespace ProxyUnsetter
             _releaseChecker.CheckNow();
         }
 
-        private void ButtonOK_Click(object sender, EventArgs e)
+        private void ButtonClose_Click(object sender, EventArgs e)
         {
             Close();
         }
@@ -153,10 +157,10 @@ namespace ProxyUnsetter
 
         private void ButtonSetManualProxy_Click(object sender, EventArgs e)
         {
-            ProxyHelper.SetProxy();
-            ProxyHelper.LastProxyState = ProxyHelper.GetCurrentProxyState();
+            _proxyManager.SetManuallySetProxy();
+            _proxyManager.LastProxyState = _proxyManager.GetCurrentProxyState();
             Program.SimpleLogLines.Add(
-                $"{DateTime.Now:g} Proxy was manually set to {ProxyHelper.ManuallySetProxyServer}.");
+                $"{DateTime.Now:g} Proxy was manually set to {_proxyManager.ManuallySetProxyServer}.");
         }
     }
 }

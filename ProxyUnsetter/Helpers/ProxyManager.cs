@@ -11,7 +11,7 @@ using ProxyUnsetter.Properties;
 
 namespace ProxyUnsetter.Helpers
 {
-    internal static class ProxyHelper
+    internal class ProxyManager
     {
         [DllImport("wininet.dll")]
         private static extern bool InternetSetOption(IntPtr hInternet, int dwOption, IntPtr lpBuffer,
@@ -26,18 +26,32 @@ namespace ProxyUnsetter.Helpers
         // Computer\HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings
         private const string ProxyRegistryKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 
-        public static string ManuallySetProxyServer = "127.0.0.1:8080";
+        private PacHttpServer _pacHttpServer;
 
-        public static ProxyState LastProxyState;
+        public string ManuallySetProxyServer = "127.0.0.1:8080";
+
+        public ProxyState LastProxyState;
 
         /// <summary>
         /// Current proxy server or auto-config url
         /// </summary>
-        public static string CurrentProxyServer = string.Empty;
+        public string CurrentProxyServer = string.Empty;
 
-        public static ProxyState GetCurrentProxyState()
+        public string AutoConfigUrl { get; private set; }
+        
+        public void FakePac()
         {
-            RegistryKey registry = Registry.CurrentUser.OpenSubKey(ProxyRegistryKey, true);
+            var autoConfigUri = GetAutoConfigUri();
+            _pacHttpServer.Stop();
+            _pacHttpServer = new PacHttpServer(autoConfigUri.Port);
+            _pacHttpServer.Run();
+            HostsFileManager.Set(autoConfigUri.Host, "127.0.0.1");
+            RefreshProxySettings();
+        }
+
+        public ProxyState GetCurrentProxyState()
+        {
+            var registry = Registry.CurrentUser.OpenSubKey(ProxyRegistryKey, true);
             if (registry == null)
             {
                 MessageBox.Show(@"Couldn't find the registry key to update proxy settings.", @"Error",
@@ -75,10 +89,21 @@ namespace ProxyUnsetter.Helpers
             if (autoConfigUrl != null)
             {
                 CurrentProxyServer = autoConfigUrl;
+                AutoConfigUrl = autoConfigUrl;
                 return ProxyState.AutomaticallySetWithAutoconfigScript;
             }
 
             return ProxyState.AutomaticallyUnset;
+        }
+
+        public Uri GetAutoConfigUri()
+        {
+            if (GetCurrentProxyState() != ProxyState.AutomaticallySetWithAutoconfigScript)
+            {
+                return new Uri(AutoConfigUrl);
+            }
+
+            return default(Uri);
         }
 
         private static void RefreshProxySettings()
@@ -87,7 +112,7 @@ namespace ProxyUnsetter.Helpers
             InternetSetOption(IntPtr.Zero, INTERNET_OPTION_REFRESH, IntPtr.Zero, 0);
         }
 
-        public static void UnsetProxy()
+        public void UnsetProxy()
         {
             RegistryKey registry = Registry.CurrentUser.OpenSubKey(ProxyRegistryKey, true);
             if (registry == null)
@@ -100,7 +125,7 @@ namespace ProxyUnsetter.Helpers
 
             registry.SetValue("ProxyEnable", 0);
 
-            if (Settings.Default.UnsetPac)
+            if (Settings.Default.UnsetOrFakePac)
             {
                 registry.DeleteValue("AutoConfigURL", false);
             }
@@ -108,7 +133,7 @@ namespace ProxyUnsetter.Helpers
             RefreshProxySettings();
         }
 
-        public static void SetProxy()
+        public void SetManuallySetProxy()
         {
             RegistryKey registry = Registry.CurrentUser.OpenSubKey(ProxyRegistryKey, true);
             if (registry == null)
@@ -124,7 +149,7 @@ namespace ProxyUnsetter.Helpers
             RefreshProxySettings();
         }
 
-        public static bool IpIsWhiteListed()
+        public bool IpIsWhiteListed()
         {
             if (Settings.Default.IpWhitelist.Count == 0)
             {
@@ -149,7 +174,7 @@ namespace ProxyUnsetter.Helpers
             return false;
         }
 
-        public static IPAddress LocalIpAddress()
+        public IPAddress LocalIpAddress()
         {
             foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
             {

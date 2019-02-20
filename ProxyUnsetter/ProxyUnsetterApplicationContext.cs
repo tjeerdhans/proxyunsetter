@@ -16,8 +16,14 @@ namespace ProxyUnsetter
 
         private MenuItem _manuallySetProxyMenuItem;
 
+        private readonly ProxyManager _proxyManager;
+        private readonly SettingsManager _settingsManager;
+
         public ProxyUnsetterApplicationContext()
         {
+            _proxyManager = new ProxyManager {ManuallySetProxyServer = Settings.Default.ManuallySetProxy};
+            _settingsManager = new SettingsManager(_proxyManager);
+
             InitTrayMenu();
 
             _releaseChecker = new ReleaseChecker();
@@ -31,7 +37,7 @@ namespace ProxyUnsetter
             checkTimer.Tick += (sender, args) => CheckProxy();
             checkTimer.Start();
 
-            ProxyHelper.ManuallySetProxyServer = Settings.Default.ManuallySetProxy;
+            _proxyManager.ManuallySetProxyServer = Settings.Default.ManuallySetProxy;
 
             System.Net.NetworkInformation.NetworkChange.NetworkAddressChanged +=
                 (sender, args) => CheckProxy(true);
@@ -42,7 +48,7 @@ namespace ProxyUnsetter
             var trayMenu = new ContextMenu();
 
             var openSettingsFormMenuItem = new MenuItem("Settings..", OnOpenSettingsForm);
-            _manuallySetProxyMenuItem = new MenuItem($"Set to {ProxyHelper.ManuallySetProxyServer}", OnSetProxy);
+            _manuallySetProxyMenuItem = new MenuItem($"Set to {_proxyManager.ManuallySetProxyServer}", OnSetProxy);
             trayMenu.MenuItems.Add("Force unset proxy now", OnUnsetProxy);
             trayMenu.MenuItems.Add(_manuallySetProxyMenuItem);
             trayMenu.MenuItems.Add(openSettingsFormMenuItem);
@@ -51,40 +57,40 @@ namespace ProxyUnsetter
 
             _trayIcon = new NotifyIcon
             {
-                Text = SettingsHelper.AppName,
+                Text = SettingsManager.AppName,
                 Icon = SystemIcons.Asterisk,
                 ContextMenu = trayMenu,
                 Visible = true
             };
 
-            ProxyHelper.LastProxyState = SetTrayIconAndReturnProxyState();
+            _proxyManager.LastProxyState = SetTrayIconAndReturnProxyState();
             CheckProxy(true);
 
             _trayIcon.DoubleClick += OnUnsetProxy;
 
-            SettingsHelper.SettingsChanged += SettingsHelperOnSettingsChanged;
+            SettingsManager.SettingsChanged += SettingsHelperOnSettingsChanged;
         }
 
         private void SettingsHelperOnSettingsChanged(object o, EventArgs eventArgs)
         {
-            _manuallySetProxyMenuItem.Text = $@"Set to {ProxyHelper.ManuallySetProxyServer}";
+            _manuallySetProxyMenuItem.Text = $@"Set to {_proxyManager.ManuallySetProxyServer}";
         }
 
         private void OnOpenSettingsForm(object sender, EventArgs e)
         {
-            using (var settingsForm = new SettingsForm(_releaseChecker))
+            using (var settingsForm = new SettingsForm(_releaseChecker, _proxyManager, _settingsManager))
             {
                 settingsForm.ShowDialog();
             }
 
-            ProxyHelper.LastProxyState = SetTrayIconAndReturnProxyState();
+            _proxyManager.LastProxyState = SetTrayIconAndReturnProxyState();
         }
 
         private void CheckProxy(bool networkChanged = false)
         {
             var proxyState = SetTrayIconAndReturnProxyState();
 
-            if (proxyState == ProxyState.Unknown || proxyState != ProxyHelper.LastProxyState || networkChanged)
+            if (proxyState == ProxyState.Unknown || proxyState != _proxyManager.LastProxyState || networkChanged)
             {
                 var humanizedProxyState = proxyState.Humanize();
                 if (networkChanged)
@@ -100,17 +106,22 @@ namespace ProxyUnsetter
 
                 if (proxyState == ProxyState.IgnoredBecauseOfWhitelistedIp)
                 {
-                    var localIpAddress = ProxyHelper.LocalIpAddress();
+                    var localIpAddress = _proxyManager.LocalIpAddress();
                     Program.SimpleLogLines.Add(
-                        $"{DateTime.Now:g} Proxy was left alone, ip is whitelisted ({localIpAddress}). Proxy is {ProxyHelper.CurrentProxyServer}");
-                    ProxyHelper.LastProxyState = proxyState;
+                        $"{DateTime.Now:g} Proxy was left alone, ip is whitelisted ({localIpAddress}). Proxy is {_proxyManager.CurrentProxyServer}");
+                    _proxyManager.LastProxyState = proxyState;
                     return;
                 }
 
-                if (Settings.Default.UnsetProxyAutomatically)
+                if (proxyState == ProxyState.AutomaticallySetWithAutoconfigScript &&
+                    Settings.Default.UnsetOrFakePac == false)
                 {
-                    ProxyHelper.UnsetProxy();
-                    ProxyHelper.LastProxyState = ProxyState.AutomaticallyUnset;
+                    _proxyManager.FakePac();
+                }
+                else if (Settings.Default.UnsetProxyAutomatically)
+                {
+                    _proxyManager.UnsetProxy();
+                    _proxyManager.LastProxyState = ProxyState.AutomaticallyUnset;
                     Program.SimpleLogLines.Add($"{DateTime.Now:g} Proxy was automatically unset.");
                     _trayIcon.Icon = SystemIcons.Asterisk;
                     Thread.Sleep(1000); // wait a second, so the transition is visible in the systray.
@@ -129,34 +140,39 @@ namespace ProxyUnsetter
 
         private ProxyState SetTrayIconAndReturnProxyState()
         {
-            var proxyState = ProxyHelper.GetCurrentProxyState();
+            var proxyState = _proxyManager.GetCurrentProxyState();
             var proxyIsSet = proxyState > ProxyState.AutomaticallyUnset;
             _trayIcon.Icon = proxyIsSet ? Resources.SetProxy : Resources.UnsetProxy;
 
             _trayIcon.Text =
                 $@"Proxy{
-                        (proxyIsSet ? $" ({ProxyHelper.CurrentProxyServer.TrimHttpAndPort().TrimAndDot(20)}) " : " ")
+                        (proxyIsSet ? $" ({_proxyManager.CurrentProxyServer.TrimHttpAndPort().TrimAndDot(20)}) " : " ")
                     }is {proxyState.Humanize()}".TrimAndDot(64);
             return proxyState;
         }
 
         private void OnSetProxy(object sender, EventArgs e)
         {
-            ProxyHelper.SetProxy();
-            ProxyHelper.LastProxyState = SetTrayIconAndReturnProxyState();
+            _proxyManager.SetManuallySetProxy();
+            _proxyManager.LastProxyState = SetTrayIconAndReturnProxyState();
             Program.SimpleLogLines.Add(
-                $"{DateTime.Now:g} Proxy was manually set to {ProxyHelper.ManuallySetProxyServer}.");
+                $"{DateTime.Now:g} Proxy was manually set to {_proxyManager.ManuallySetProxyServer}.");
         }
 
         private void OnUnsetProxy(object sender, EventArgs e)
         {
-            ProxyHelper.UnsetProxy();
-            ProxyHelper.LastProxyState = SetTrayIconAndReturnProxyState();
+            _proxyManager.UnsetProxy();
+            _proxyManager.LastProxyState = SetTrayIconAndReturnProxyState();
             Program.SimpleLogLines.Add($"{DateTime.Now:g} Proxy was manually unset.");
         }
 
         private void OnExit(object sender, EventArgs e)
         {
+            if (_proxyManager.LastProxyState == ProxyState.AutomaticallySetWithAutoconfigScript)
+            {
+                HostsFileManager.Remove(_proxyManager.GetAutoConfigUri().Host);
+            }
+
             Application.Exit();
         }
 

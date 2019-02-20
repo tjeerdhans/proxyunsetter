@@ -38,21 +38,24 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.textBoxManualProxy = new System.Windows.Forms.TextBox();
             this.buttonSetManualProxy = new System.Windows.Forms.Button();
-            this.buttonOK = new System.Windows.Forms.Button();
+            this.buttonClose = new System.Windows.Forms.Button();
             this.listBoxIpWhitelist = new System.Windows.Forms.ListBox();
             this.buttonAdd = new System.Windows.Forms.Button();
             this.buttonDelete = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.labelDetectedIp = new System.Windows.Forms.Label();
-            this.checkBoxUnsetPac = new System.Windows.Forms.CheckBox();
+            this.radioButtonUnsetPac = new System.Windows.Forms.RadioButton();
+            this.radioButtonFakePac = new System.Windows.Forms.RadioButton();
+            this.groupBoxPacBehaviour = new System.Windows.Forms.GroupBox();
+            this.groupBoxPacBehaviour.SuspendLayout();
             this.SuspendLayout();
             // 
             // label5
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(8, 189);
+            this.label5.Location = new System.Drawing.Point(8, 212);
             this.label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(57, 13);
@@ -88,7 +91,7 @@
             // checkBoxLaunchAtWindowsStartup
             // 
             this.checkBoxLaunchAtWindowsStartup.AutoSize = true;
-            this.checkBoxLaunchAtWindowsStartup.Location = new System.Drawing.Point(9, 49);
+            this.checkBoxLaunchAtWindowsStartup.Location = new System.Drawing.Point(9, 97);
             this.checkBoxLaunchAtWindowsStartup.Margin = new System.Windows.Forms.Padding(2);
             this.checkBoxLaunchAtWindowsStartup.Name = "checkBoxLaunchAtWindowsStartup";
             this.checkBoxLaunchAtWindowsStartup.Size = new System.Drawing.Size(156, 17);
@@ -99,7 +102,7 @@
             // checkBoxCheckForNewReleaseWeekly
             // 
             this.checkBoxCheckForNewReleaseWeekly.AutoSize = true;
-            this.checkBoxCheckForNewReleaseWeekly.Location = new System.Drawing.Point(9, 69);
+            this.checkBoxCheckForNewReleaseWeekly.Location = new System.Drawing.Point(9, 117);
             this.checkBoxCheckForNewReleaseWeekly.Margin = new System.Windows.Forms.Padding(2);
             this.checkBoxCheckForNewReleaseWeekly.Name = "checkBoxCheckForNewReleaseWeekly";
             this.checkBoxCheckForNewReleaseWeekly.Size = new System.Drawing.Size(168, 17);
@@ -109,7 +112,7 @@
             // 
             // buttonCheckForNewRelease
             // 
-            this.buttonCheckForNewRelease.Location = new System.Drawing.Point(175, 65);
+            this.buttonCheckForNewRelease.Location = new System.Drawing.Point(181, 113);
             this.buttonCheckForNewRelease.Margin = new System.Windows.Forms.Padding(2);
             this.buttonCheckForNewRelease.Name = "buttonCheckForNewRelease";
             this.buttonCheckForNewRelease.Size = new System.Drawing.Size(69, 22);
@@ -120,18 +123,18 @@
             // 
             // textBoxManualProxy
             // 
-            this.textBoxManualProxy.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxManualProxy.Location = new System.Drawing.Point(83, 130);
+            this.textBoxManualProxy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.textBoxManualProxy.Location = new System.Drawing.Point(83, 157);
             this.textBoxManualProxy.Margin = new System.Windows.Forms.Padding(2);
             this.textBoxManualProxy.Name = "textBoxManualProxy";
-            this.textBoxManualProxy.Size = new System.Drawing.Size(163, 20);
+            this.textBoxManualProxy.Size = new System.Drawing.Size(179, 20);
             this.textBoxManualProxy.TabIndex = 17;
             this.toolTip1.SetToolTip(this.textBoxManualProxy, "Proxy server with port, e.g. 127.0.0.1:8080");
             // 
             // buttonSetManualProxy
             // 
-            this.buttonSetManualProxy.Location = new System.Drawing.Point(251, 128);
+            this.buttonSetManualProxy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonSetManualProxy.Location = new System.Drawing.Point(267, 155);
             this.buttonSetManualProxy.Name = "buttonSetManualProxy";
             this.buttonSetManualProxy.Size = new System.Drawing.Size(74, 23);
             this.buttonSetManualProxy.TabIndex = 20;
@@ -140,23 +143,23 @@
             this.buttonSetManualProxy.UseVisualStyleBackColor = true;
             this.buttonSetManualProxy.Click += new System.EventHandler(this.ButtonSetManualProxy_Click);
             // 
-            // buttonOK
+            // buttonClose
             // 
-            this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonOK.Location = new System.Drawing.Point(251, 289);
-            this.buttonOK.Margin = new System.Windows.Forms.Padding(2);
-            this.buttonOK.Name = "buttonOK";
-            this.buttonOK.Size = new System.Drawing.Size(74, 23);
-            this.buttonOK.TabIndex = 11;
-            this.buttonOK.Text = "OK";
-            this.buttonOK.UseVisualStyleBackColor = true;
-            this.buttonOK.Click += new System.EventHandler(this.ButtonOK_Click);
+            this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonClose.Location = new System.Drawing.Point(372, 312);
+            this.buttonClose.Margin = new System.Windows.Forms.Padding(2);
+            this.buttonClose.Name = "buttonClose";
+            this.buttonClose.Size = new System.Drawing.Size(74, 23);
+            this.buttonClose.TabIndex = 11;
+            this.buttonClose.Text = "Close";
+            this.buttonClose.UseVisualStyleBackColor = true;
+            this.buttonClose.Click += new System.EventHandler(this.ButtonClose_Click);
             // 
             // listBoxIpWhitelist
             // 
             this.listBoxIpWhitelist.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.listBoxIpWhitelist.FormattingEnabled = true;
-            this.listBoxIpWhitelist.Location = new System.Drawing.Point(9, 204);
+            this.listBoxIpWhitelist.Location = new System.Drawing.Point(9, 227);
             this.listBoxIpWhitelist.Margin = new System.Windows.Forms.Padding(2);
             this.listBoxIpWhitelist.Name = "listBoxIpWhitelist";
             this.listBoxIpWhitelist.Size = new System.Drawing.Size(172, 108);
@@ -166,7 +169,7 @@
             // buttonAdd
             // 
             this.buttonAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonAdd.Location = new System.Drawing.Point(183, 204);
+            this.buttonAdd.Location = new System.Drawing.Point(183, 227);
             this.buttonAdd.Margin = new System.Windows.Forms.Padding(2);
             this.buttonAdd.Name = "buttonAdd";
             this.buttonAdd.Size = new System.Drawing.Size(50, 23);
@@ -178,7 +181,7 @@
             // buttonDelete
             // 
             this.buttonDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonDelete.Location = new System.Drawing.Point(183, 232);
+            this.buttonDelete.Location = new System.Drawing.Point(183, 255);
             this.buttonDelete.Margin = new System.Windows.Forms.Padding(2);
             this.buttonDelete.Name = "buttonDelete";
             this.buttonDelete.Size = new System.Drawing.Size(50, 23);
@@ -189,8 +192,9 @@
             // 
             // label1
             // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(8, 133);
+            this.label1.Location = new System.Drawing.Point(8, 160);
             this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(70, 13);
@@ -201,7 +205,7 @@
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(8, 170);
+            this.label2.Location = new System.Drawing.Point(8, 193);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(67, 13);
             this.label2.TabIndex = 18;
@@ -211,28 +215,51 @@
             // 
             this.labelDetectedIp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelDetectedIp.AutoSize = true;
-            this.labelDetectedIp.Location = new System.Drawing.Point(80, 170);
+            this.labelDetectedIp.Location = new System.Drawing.Point(80, 193);
             this.labelDetectedIp.Name = "labelDetectedIp";
             this.labelDetectedIp.Size = new System.Drawing.Size(10, 13);
             this.labelDetectedIp.TabIndex = 19;
             this.labelDetectedIp.Text = "-";
             // 
-            // checkBoxUnsetPac
+            // radioButtonUnsetPac
             // 
-            this.checkBoxUnsetPac.AutoSize = true;
-            this.checkBoxUnsetPac.Location = new System.Drawing.Point(9, 92);
-            this.checkBoxUnsetPac.Name = "checkBoxUnsetPac";
-            this.checkBoxUnsetPac.Size = new System.Drawing.Size(194, 17);
-            this.checkBoxUnsetPac.TabIndex = 21;
-            this.checkBoxUnsetPac.Text = "Unset Proxy autoconfig (PAC) URL ";
-            this.checkBoxUnsetPac.UseVisualStyleBackColor = true;
+            this.radioButtonUnsetPac.AutoSize = true;
+            this.radioButtonUnsetPac.Location = new System.Drawing.Point(6, 19);
+            this.radioButtonUnsetPac.Name = "radioButtonUnsetPac";
+            this.radioButtonUnsetPac.Size = new System.Drawing.Size(190, 17);
+            this.radioButtonUnsetPac.TabIndex = 22;
+            this.radioButtonUnsetPac.TabStop = true;
+            this.radioButtonUnsetPac.Text = "Unset Proxy autoconfig (PAC) URL";
+            this.radioButtonUnsetPac.UseVisualStyleBackColor = true;
+            // 
+            // radioButtonFakePac
+            // 
+            this.radioButtonFakePac.AutoSize = true;
+            this.radioButtonFakePac.Location = new System.Drawing.Point(6, 42);
+            this.radioButtonFakePac.Name = "radioButtonFakePac";
+            this.radioButtonFakePac.Size = new System.Drawing.Size(157, 17);
+            this.radioButtonFakePac.TabIndex = 23;
+            this.radioButtonFakePac.TabStop = true;
+            this.radioButtonFakePac.Text = "Hijack PAC URL and fake it";
+            this.radioButtonFakePac.UseVisualStyleBackColor = true;
+            // 
+            // groupBoxPacBehaviour
+            // 
+            this.groupBoxPacBehaviour.Controls.Add(this.radioButtonUnsetPac);
+            this.groupBoxPacBehaviour.Controls.Add(this.radioButtonFakePac);
+            this.groupBoxPacBehaviour.Location = new System.Drawing.Point(209, 9);
+            this.groupBoxPacBehaviour.Name = "groupBoxPacBehaviour";
+            this.groupBoxPacBehaviour.Size = new System.Drawing.Size(235, 72);
+            this.groupBoxPacBehaviour.TabIndex = 24;
+            this.groupBoxPacBehaviour.TabStop = false;
+            this.groupBoxPacBehaviour.Text = "PAC behaviour";
             // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(332, 319);
-            this.Controls.Add(this.checkBoxUnsetPac);
+            this.ClientSize = new System.Drawing.Size(453, 342);
+            this.Controls.Add(this.groupBoxPacBehaviour);
             this.Controls.Add(this.buttonSetManualProxy);
             this.Controls.Add(this.labelDetectedIp);
             this.Controls.Add(this.label2);
@@ -241,7 +268,7 @@
             this.Controls.Add(this.buttonDelete);
             this.Controls.Add(this.buttonAdd);
             this.Controls.Add(this.listBoxIpWhitelist);
-            this.Controls.Add(this.buttonOK);
+            this.Controls.Add(this.buttonClose);
             this.Controls.Add(this.buttonCheckForNewRelease);
             this.Controls.Add(this.checkBoxCheckForNewReleaseWeekly);
             this.Controls.Add(this.checkBoxLaunchAtWindowsStartup);
@@ -254,6 +281,8 @@
             this.Name = "SettingsForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Settings";
+            this.groupBoxPacBehaviour.ResumeLayout(false);
+            this.groupBoxPacBehaviour.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -267,7 +296,7 @@
         private System.Windows.Forms.CheckBox checkBoxLaunchAtWindowsStartup;
         private System.Windows.Forms.CheckBox checkBoxCheckForNewReleaseWeekly;
         private System.Windows.Forms.Button buttonCheckForNewRelease;
-        private System.Windows.Forms.Button buttonOK;
+        private System.Windows.Forms.Button buttonClose;
         private System.Windows.Forms.ListBox listBoxIpWhitelist;
         private System.Windows.Forms.Button buttonAdd;
         private System.Windows.Forms.Button buttonDelete;
@@ -276,6 +305,8 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label labelDetectedIp;
         private System.Windows.Forms.Button buttonSetManualProxy;
-        private System.Windows.Forms.CheckBox checkBoxUnsetPac;
+        private System.Windows.Forms.RadioButton radioButtonUnsetPac;
+        private System.Windows.Forms.RadioButton radioButtonFakePac;
+        private System.Windows.Forms.GroupBox groupBoxPacBehaviour;
     }
 }

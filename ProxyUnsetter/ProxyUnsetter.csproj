@@ -63,10 +63,16 @@
     <ManifestKeyFile>ProxyUnsetter_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
+    <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IPAddressRange, Version=3.2.0.0, Culture=neutral, PublicKeyToken=578e3c3d17e7c751, processorArchitecture=MSIL">
@@ -97,9 +103,13 @@
     <Compile Include="Helpers\CrashHelper.cs" />
     <Compile Include="Helpers\Extensions.cs" />
     <Compile Include="Helpers\GitHubRelease.cs" />
+    <Compile Include="Helpers\HostsFileEntry.cs" />
+    <Compile Include="Helpers\HostsFileHelper.cs" />
+    <Compile Include="Helpers\HostsFileManager.cs" />
+    <Compile Include="Helpers\PacHttpServer.cs" />
     <Compile Include="Helpers\ReleaseChecker.cs" />
     <Compile Include="Helpers\ReleaseCheckEventArgs.cs" />
-    <Compile Include="Helpers\SettingsHelper.cs" />
+    <Compile Include="Helpers\SettingsManager.cs" />
     <Compile Include="IpAddressControl\DotControl.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -121,7 +131,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Helpers\ProxyHelper.cs" />
+    <Compile Include="Helpers\ProxyManager.cs" />
     <Compile Include="Helpers\ProxyState.cs" />
     <Compile Include="ProxyUnsetterApplicationContext.cs" />
     <Compile Include="SettingsForm.cs">
@@ -152,6 +162,7 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

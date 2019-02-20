@@ -5,12 +5,18 @@ using ProxyUnsetter.Properties;
 
 namespace ProxyUnsetter.Helpers
 {
-    internal static class SettingsHelper
+    internal class SettingsManager
     {
+        private readonly ProxyManager _proxyManager;
         public static event EventHandler SettingsChanged;
         public const string AppName = "ProxyUnsetter";
 
-        public static bool GetLaunchAtWindowsStartupState()
+        public SettingsManager(ProxyManager proxyManager)
+        {
+            _proxyManager = proxyManager;
+        }
+
+        public bool GetLaunchAtWindowsStartupState()
         {
             var registryKey = Registry.CurrentUser.OpenSubKey
                 ("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
@@ -65,9 +71,9 @@ namespace ProxyUnsetter.Helpers
             Settings.Default.Save();
         }
 
-        public static void ToggleUnsetPac(bool set)
+        public static void ToggleUnsetOrFakePac(bool set)
         {
-            Settings.Default.UnsetPac = set;
+            Settings.Default.UnsetOrFakePac = set;
             Settings.Default.Save();
         }
 
@@ -77,11 +83,11 @@ namespace ProxyUnsetter.Helpers
             return new[] {split[0], split[1]};
         }
 
-        public static void SetManuallySetProxy(string manualProxy)
+        public void SetManuallySetProxy(string manualProxy)
         {
             Settings.Default.ManuallySetProxy = manualProxy;
             Settings.Default.Save();
-            ProxyHelper.ManuallySetProxyServer = manualProxy;
+            _proxyManager.ManuallySetProxyServer = manualProxy;
             SettingsChanged?.Invoke(null, EventArgs.Empty);
         }
     }
